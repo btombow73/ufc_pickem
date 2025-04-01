@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Update Fight: {{ fight.fighter1 }} vs {{ fight.fighter2 }}</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+      {{ form.fighter1.label }}<br>
+      {{ form.fighter1(size=32) }}
+    </div>
+    <div>
+      {{ form.fighter2.label }}<br>
+      {{ form.fighter2(size=32) }}
+    </div>
+    <div>
+      {{ form.date.label }}<br>
+      {{ form.date() }}
+    </div>
+    <div>
+      {{ form.event_id.label }}<br>
+      {{ form.event_id() }}
+    </div>
+    <div>
+      {{ form.favorite.label }}<br>
+      {{ form.favorite() }}
+    </div>
+    <div>
+      {{ form.submit(class="btn") }}
+    </div>
+  </form>
+{% endblock %}

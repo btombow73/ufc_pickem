@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Pick for: {{ fight.fighter1 }} vs {{ fight.fighter2 }}</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+      {{ form.selected_fighter.label }}<br>
+      {{ form.selected_fighter() }}
+    </div>
+    <div>
+      {{ form.selected_method.label }}<br>
+      {{ form.selected_method() }}
+    </div>
+    <div>
+      {{ form.submit(class="btn") }}
+    </div>
+  </form>
+{% endblock %}

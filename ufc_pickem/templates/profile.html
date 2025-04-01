@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>{{ user.username }}'s Profile</h2>
+  <p>Email: {{ user.email }}</p>
+  <h3>Pick History</h3>
+  {% if picks %}
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Fight</th>
+          <th>Picked</th>
+          <th>Method</th>
+          <th>Result</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pick in picks %}
+          <tr>
+            <td>{{ pick.fight.fighter1 }} vs {{ pick.fight.fighter2 }}</td>
+            <td>{{ pick.selected_fighter }}</td>
+            <td>{{ pick.selected_method }}</td>
+            <td>
+              {% if pick.is_correct is none %}
+                Pending
+              {% elif pick.is_correct %}
+                ✅
+              {% else %}
+                ❌
+              {% endif %}
+            </td>
+            <td>{{ pick.score or '-' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No picks made yet.</p>
+  {% endif %}
+{% endblock %}

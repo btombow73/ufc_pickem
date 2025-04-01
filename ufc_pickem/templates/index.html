@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Welcome to UFC Pick'em</h1>
+  <p>Pick your favorite UFC fighters and compete with your friends!</p>
+  <p>
+    <a href="{{ url_for('auth.login') }}" class="btn">Login</a>
+    <a href="{{ url_for('main.register') }}" class="btn">Register</a>
+  </p>
+{% endblock %}

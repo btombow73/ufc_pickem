@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Upcoming Events</h2>
+  {% if upcoming_events %}
+    {% for event in upcoming_events %}
+      <div class="event-section">
+        <h3>{{ event.name }} ({{ event.date }})</h3>
+        <div class="fight-list">
+          {% for fight in event.fights %}
+            <div class="fight-item">
+              <p>
+                {{ fight.fighter1 }} vs {{ fight.fighter2 }} ({{ fight.date }})
+                {% if fight.winner %}
+                  <br><strong>Result:</strong> {{ fight.winner }} won by {{ fight.method }}.
+                {% endif %}
+              </p>
+              {% set pick = picks_map.get(fight.id) %}
+              <div class="actions">
+                {% if current_user.is_authenticated and not current_user.is_admin %}
+                  {% if not fight.winner %}
+                    {% if pick %}
+                      <p>Your pick: {{ pick.selected_fighter }} ({{ pick.selected_method }})
+                        <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn">Edit Pick</a>
+                      </p>
+                    {% else %}
+                      <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn">Make Pick</a>
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                  <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn">Edit Fight</a>
+                  {% if not fight.winner %}
+                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn">Enter Result</a>
+                  {% else %}
+                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn">Edit Result</a>
+                  {% endif %}
+                  <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn">Delete Fight</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No upcoming events at the moment.</p>
+  {% endif %}
+
+  <h2>Past Events</h2>
+  {% if past_events %}
+    {% for event in past_events %}
+      <div class="event-section">
+        <h3>{{ event.name }} ({{ event.date }})</h3>
+        <div class="fight-list">
+          {% for fight in event.fights %}
+            <div class="fight-item">
+              <p>
+                {{ fight.fighter1 }} vs {{ fight.fighter2 }} ({{ fight.date }})
+                {% if fight.winner %}
+                  <br><strong>Result:</strong> {{ fight.winner }} won by {{ fight.method }}.
+                {% endif %}
+              </p>
+              {% set pick = picks_map.get(fight.id) %}
+              <div class="actions">
+                {% if current_user.is_authenticated %}
+                  {% if pick %}
+                    <p>Your pick: {{ pick.selected_fighter }} ({{ pick.selected_method }})
+                      {% if fight.winner %}
+                        – Points: {{ pick.points_awarded }}
+                      {% endif %}
+                    </p>
+                  {% endif %}
+                {% endif %}
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                  <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn">Edit Fight</a>
+                  {% if fight.winner %}
+                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn">Edit Result</a>
+                  {% endif %}
+                  <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn">Delete Fight</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No past events yet.</p>
+  {% endif %}
+{% endblock %}

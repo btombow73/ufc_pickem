@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Overall Leaderboard</h2>
+  <table class="leaderboard-table">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>User</th>
+        <th>Points</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in leaderboard %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.points }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Event Winners</h2>
+  {% if event_winners %}
+    <ul>
+      {% for winner in event_winners %}
+        <li><strong>{{ winner.event }}:</strong> {{ winner.username }} ({{ winner.points }} points)</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No events have been completed yet.</p>
+  {% endif %}
+{% endblock %}

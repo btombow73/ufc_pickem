@@ -11,6 +11,7 @@
           <th>Fight</th>
           <th>Picked</th>
           <th>Method</th>
+          <th>Round</th>
           <th>Result</th>
           <th>Score</th>
         </tr>
@@ -21,6 +22,7 @@
             <td>{{ pick.fight.fighter1 }} vs {{ pick.fight.fighter2 }}</td>
             <td>{{ pick.selected_fighter }}</td>
             <td>{{ pick.selected_method }}</td>
+            <td>{{ pick.selected_round}}</td>
             <td>
               {% if pick.is_correct is none %}
                 Pending

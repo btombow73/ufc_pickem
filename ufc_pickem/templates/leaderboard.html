@@ -1,34 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Overall Leaderboard</h2>
-  <table class="leaderboard-table">
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>User</th>
-        <th>Points</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in leaderboard %}
+<div class="container mt-4">
+  <h2 class="mb-4">🏆 Leaderboard</h2>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
         <tr>
+          <th>Rank</th>
+          <th>Username</th>
+          <th>Total Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in leaderboard %}
+        <tr {% if user.username == 'Book' %} class="table-warning fw-bold" {% endif %}>
           <td>{{ loop.index }}</td>
-          <td>{{ user.username }}</td>
+          <td>
+            {% if user.username == 'Book' %}
+              🧠 {{ user.username }} <span class="badge bg-secondary"></span>
+            {% else %}
+              <a href="{{ url_for('main.profile', user_id=user.id) }}">{{ user.username }}</a>
+            {% endif %}
+          </td>
           <td>{{ user.points }}</td>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        {% endfor %}
+        
+      </tbody>
+    </table>
+  </div>
 
-  <h2>Event Winners</h2>
-  {% if event_winners %}
-    <ul>
-      {% for winner in event_winners %}
-        <li><strong>{{ winner.event }}:</strong> {{ winner.username }} ({{ winner.points }} points)</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No events have been completed yet.</p>
-  {% endif %}
+  <hr class="my-4">
+
+  <h4>🏅 Top Performer per Event</h4>
+  <ul class="list-group">
+    {% for winner in event_winners %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      {{ winner.event }} – <strong>{{ winner.username }}</strong>
+      <span class="badge bg-primary rounded-pill">{{ winner.points }} pts</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock %}

@@ -1,19 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Pick for: {{ fight.fighter1 }} vs {{ fight.fighter2 }}</h2>
+<div class="container mt-4">
+  <h2 class="mb-4">Make Your Pick: {{ fight.fighter1 }} vs {{ fight.fighter2 }}</h2>
+
   <form method="POST">
     {{ form.hidden_tag() }}
-    <div>
-      {{ form.selected_fighter.label }}<br>
-      {{ form.selected_fighter() }}
+
+    <div class="mb-3">
+      <label for="selected_fighter" class="form-label">Pick a Fighter</label>
+      {{ form.selected_fighter(class="form-select") }}
+      {% for error in form.selected_fighter.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
-    <div>
-      {{ form.selected_method.label }}<br>
-      {{ form.selected_method() }}
+
+    <div class="mb-3">
+      <label for="selected_method" class="form-label">Method of Victory</label>
+      {{ form.selected_method(class="form-select") }}
+      {% for error in form.selected_method.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
-    <div>
-      {{ form.submit(class="btn") }}
+
+    <div class="mb-3">
+      <label for="selected_round" class="form-label">Round of Victory</label>
+      {{ form.selected_round(class="form-select") }}
+      {% for error in form.selected_round.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
+
+    <button type="submit" class="btn btn-primary">Save Pick</button>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
   </form>
+</div>
 {% endblock %}

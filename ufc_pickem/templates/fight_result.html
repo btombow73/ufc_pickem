@@ -1,19 +1,54 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Enter Result for {{ fight.fighter1 }} vs {{ fight.fighter2 }}</h2>
+<div class="container mt-4">
+  <h2 class="mb-4">Enter Fight Result: {{ fight.fighter1 }} vs {{ fight.fighter2 }}</h2>
+
   <form method="POST">
     {{ form.hidden_tag() }}
-    <div>
-      {{ form.winner.label }}<br>
-      {{ form.winner() }}
+
+    <div class="mb-3">
+      <label for="winner" class="form-label">Winner</label>
+      {{ form.winner(class="form-select") }}
+      {% for error in form.winner.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
-    <div>
-      {{ form.method.label }}<br>
-      {{ form.method() }}
+
+    <div class="mb-3">
+      <label for="method" class="form-label">Method of Victory</label>
+      {{ form.method(class="form-select") }}
+      {% for error in form.method.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
-    <div>
-      {{ form.submit(class="btn") }}
+
+    <div class="mb-3">
+      <label for="round" class="form-label">Round of Victory</label>
+      {{ form.round(class="form-select") }}
+      {% for error in form.round.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
+
+    <div class="mb-3">
+      <label for="best_method" class="form-label">Best Odds Method (Book's Pick)</label>
+      {{ form.best_method(class="form-select") }}
+      {% for error in form.best_method.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      <label for="best_round" class="form-label">Best Odds Round (Book's Pick)</label>
+      {{ form.best_round(class="form-select") }}
+      {% for error in form.best_round.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-success">Submit Result</button>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
   </form>
+</div>
 {% endblock %}

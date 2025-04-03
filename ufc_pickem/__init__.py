@@ -1,6 +1,6 @@
 from flask import Flask
 from config import Config
-from .extensions import db, login_manager
+from .extensions import db, login_manager, migrate
 from .models import User
 
 def create_app():
@@ -10,7 +10,8 @@ def create_app():
     # Init extensions
     db.init_app(app)
     login_manager.init_app(app)
-
+    migrate.init_app(app, db)
+    
     # Login manager config
     @login_manager.user_loader
     def load_user(user_id):

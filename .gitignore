@@ -1,0 +1,27 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Flask and instance-related files
+instance/
+*.sqlite3
+*.db
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+.env.*
+
+# VSCode project settings (optional)
+.vscode/
+
+# Flask-Migrate cache
+migrations/__pycache__/
+migrations/versions/__pycache__/
+
+# System-specific
+.DS_Store
+Thumbs.db

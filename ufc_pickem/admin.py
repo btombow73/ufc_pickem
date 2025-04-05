@@ -192,7 +192,7 @@ def fight_result(fight_id):
             username=os.getenv('BOOK_USERNAME'),
             email=os.getenv('BOOK_EMAIL'),
             is_admin=False,
-            is_verified=True)
+            is_verified=True))
             db.session.add(book_user)
             db.session.commit()
 

@@ -2,23 +2,23 @@
 
 {% block content %}
   <h2>Register</h2>
-  <form method="POST" action="{{ url_for('main.register') }}">
+  <form method="POST" action="{{ url_for('main.register') }}" autocomplete="on">
     {{ form.hidden_tag() }}
     <div>
       {{ form.username.label }}<br>
-      {{ form.username(size=32) }}
+      {{ form.username(size=32, autocomplete="username") }}
     </div>
     <div>
       {{ form.email.label }}<br>
-      {{ form.email(size=32) }}
+      {{ form.email(size=32, autocomplete="email") }}
     </div>
     <div>
       {{ form.password.label }}<br>
-      {{ form.password(size=32) }}
+      {{ form.password(size=32, autocomplete="new-password") }}
     </div>
     <div>
       {{ form.confirm.label }}<br>
-      {{ form.confirm(size=32) }}
+      {{ form.confirm(size=32, autocomplete="new-password") }}
     </div>
     <div>
       {{ form.submit(class="btn") }}

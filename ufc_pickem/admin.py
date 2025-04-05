@@ -188,7 +188,11 @@ def fight_result(fight_id):
         # Book user logic
         book_user = User.query.filter_by(username='Book').first()
         if not book_user:
-            book_user = User(username='Book', email='book@example.com', password='book', is_admin=False)
+            book_user = User(book_user = User(
+            username=os.getenv('BOOK_USERNAME'),
+            email=os.getenv('BOOK_EMAIL'),
+            is_admin=False,
+            is_verified=True)
             db.session.add(book_user)
             db.session.commit()
 

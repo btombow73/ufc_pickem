@@ -1,23 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<script>
+  function toggleEvent(id) {
+    const content = document.getElementById(`event-${id}`);
+    const button = document.getElementById(`btn-${id}`);
+
+    if (content.style.display === "none" || content.style.display === "") {
+      content.style.display = "block";
+      button.innerText = "−";
+    } else {
+      content.style.display = "none";
+      button.innerText = "+";
+    }
+  }
+</script>
+
 {% if current_user.is_authenticated and not current_user.is_verified %}
   <div class="alert alert-warning d-flex justify-content-between align-items-center">
     Your email is not verified. Please check your inbox (or spam folder).
     <a href="{{ url_for('main.resend_verification') }}" class="btn btn-sm btn-outline-primary">Resend Verification</a>
   </div>
 {% endif %}
-  <h2>Upcoming Events</h2>
+
+<h2>Upcoming Events</h2>
+<div id="upcoming-events">
   {% if upcoming_events %}
     {% for event in upcoming_events %}
       <div class="event-section">
-        <h3>{{ event.name }} ({{ event.date }})</h3>
+        <h3 class="d-flex align-items-center justify-content-between">
+          {{ event.name }} ({{ event.date }})
+          <button class="btn btn-sm btn-outline-primary toggle-btn"
+        onclick="toggleEvent('{{ event.id }}')"
+        id="btn-{{ event.id }}">
+  −
+</button>
+        </h3>
+
         {% if current_user.is_authenticated and current_user.is_admin %}
-        <a href="{{ url_for('admin.update_event', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">Edit Event</a>
-        <a href="{{ url_for('admin.delete_event', event_id=event.id) }}" class="btn btn-outline-danger btn-sm">Delete Event</a>
+          <div class="mb-2">
+            <a href="{{ url_for('admin.update_event', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">Edit Event</a>
+            <a href="{{ url_for('admin.delete_event', event_id=event.id) }}" class="btn btn-outline-danger btn-sm">Delete Event</a>
+          </div>
         {% endif %}
 
-        <div class="fight-list">
+        <div class="fight-list" id="event-{{ event.id }}" style="display: block;">
           {% for fight in event.fights %}
             <div class="fight-item">
               <p>
@@ -60,6 +88,7 @@
   {% else %}
     <p>No upcoming events at the moment.</p>
   {% endif %}
+</div>
 
   <hr>
 
@@ -67,12 +96,18 @@
 {% if past_events %}
   {% for event in past_events %}
     <div class="event-section">
-      <h3>{{ event.name }} ({{ event.date }})</h3>
+      <h3>{{ event.name }} ({{ event.date }})
+        <button class="btn btn-sm btn-outline-primary toggle-btn"
+        onclick="toggleEvent('{{ event.id }}')"
+        id="btn-{{ event.id }}">
+         +
+        </button>
+      </h3>
       {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="{{ url_for('admin.update_event', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">Edit Event</a>
         <a href="{{ url_for('admin.delete_event', event_id=event.id) }}" class="btn btn-outline-danger btn-sm">Delete Event</a>
         {% endif %}
-      <div class="fight-list">
+      <div class="fight-list" id="event-{{ event.id }}" style="display: none;">
         {% for fight in event.fights %}
           <div class="fight-item">
             <p>

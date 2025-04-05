@@ -18,8 +18,9 @@ def login():
     if form.validate_on_submit():
         # Login using email or username
         user = User.query.filter(
-            (User.email == form.email.data) | (User.username == form.email.data)
+        (User.email == form.email.data.lower()) | (User.username == form.email.data)
         ).first()
+
 
         if user:
             # Check if account is verified

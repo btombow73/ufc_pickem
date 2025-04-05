@@ -4,19 +4,23 @@
   <h2>Login</h2>
   <form method="POST" action="{{ url_for('auth.login') }}">
     {{ form.hidden_tag() }}
-    <div>
-      {{ form.email.label }}<br>
-      {{ form.email(size=32) }}
+
+    <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email(class="form-control", autocomplete="username") }}
     </div>
-    <div>
-      {{ form.password.label }}<br>
-      {{ form.password(size=32) }}
+
+    <div class="form-group">
+        {{ form.password.label }}
+        {{ form.password(class="form-control", autocomplete="current-password") }}
     </div>
-    <div>
-      {{ form.remember() }} {{ form.remember.label }}
+
+    <div class="form-check">
+        {{ form.remember(class="form-check-input") }}
+        {{ form.remember.label(class="form-check-label") }}
     </div>
-    <div>
-      {{ form.submit(class="btn") }}
-    </div>
-  </form>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+</form>
+
 {% endblock %}

@@ -29,8 +29,8 @@ def register():
         token = secrets.token_urlsafe(32)
 
         new_user = User(
-            username=form.username.data,
-            email=form.email.data,
+            username=form.username.data.lower(),
+            email=form.email.data.lower(),
             password=hashed_pw,
             is_admin=False,
             is_verified=False,

@@ -4,17 +4,14 @@
 
 <script>
   function toggleEvent(id) {
-    const content = document.getElementById(`event-${id}`);
-    const button = document.getElementById(`btn-${id}`);
+  const content = document.getElementById(`event-${id}`);
+  const icon = document.getElementById(`btn-${id}`);
 
-    if (content.style.display === "none" || content.style.display === "") {
-      content.style.display = "block";
-      button.innerText = "−";
-    } else {
-      content.style.display = "none";
-      button.innerText = "+";
-    }
-  }
+  const isHidden = content.style.display === "none" || content.style.display === "";
+  content.style.display = isHidden ? "block" : "none";
+  icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+}
+
 </script>
 
 {% if current_user.is_authenticated and not current_user.is_verified %}
@@ -29,15 +26,13 @@
   {% if upcoming_events %}
     {% for event in upcoming_events %}
       <div class="event-section">
-        <h3 class="d-flex align-items-center justify-content-between">
-          {{ event.name }} ({{ event.date }})
-          <button class="btn btn-sm btn-outline-primary toggle-btn"
-        onclick="toggleEvent('{{ event.id }}')"
-        id="btn-{{ event.id }}">
-  −
-</button>
+        <h3 class="event-toggle" onclick="toggleEvent('{{ event.id }}')">
+          <span>{{ event.name }} ({{ event.date }})</span>
+          <svg id="btn-{{ event.id }}" class="toggle-btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
+               xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 8L10 13L15 8" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </h3>
-
         {% if current_user.is_authenticated and current_user.is_admin %}
           <div class="mb-2">
             <a href="{{ url_for('admin.update_event', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">Edit Event</a>
@@ -46,42 +41,53 @@
         {% endif %}
 
         <div class="fight-list" id="event-{{ event.id }}" style="display: block;">
-          {% for fight in event.fights %}
-            <div class="fight-item">
-              <p>
-                <strong>{{ fight.fighter1 }} vs {{ fight.fighter2 }}</strong> ({{ fight.date }})
-                {% if fight.winner %}
-                  <br><strong>Result:</strong> {{ fight.winner }} won by {{ fight.method }} in {{ fight.round }}.
-                {% endif %}
-              </p>
+          <ul class="fight-list list-group" data-event-id="{{ event.id }}">
+            {% for fight in event.fights %}
+              <li class="list-group-item d-flex justify-content-between align-items-center" data-fight-id="{{ fight.id }}">
+                <div>
+                  <strong>{{ fight.fighter1 }} vs {{ fight.fighter2 }}</strong>
+                  {% if fight.winner %}
+                    <br><strong>Result:</strong>
+                    {{ fight.winner }} won by
+                    {% if fight.method == "Decision" %}
+                      {{ fight.method }}.
+                    {% else %}
+                      {{ fight.method }} in {{ fight.round }}.
+                    {% endif %}
+                  {% endif %}
+                </div>
 
-              {% set pick = picks_map.get(fight.id) %}
-              <div class="actions">
-                {% if current_user.is_authenticated and not current_user.is_admin %}
-                  {% if not fight.winner %}
+                <div class="actions text-end">
+                  {% if current_user.is_authenticated and not current_user.is_admin and not fight.winner %}
+                    {% set pick = picks_map.get(fight.id) %}
                     {% if pick %}
                       <p>
-                        Your Pick: {{ pick.selected_fighter }} ({{ pick.selected_method }} – {{ pick.selected_round }})
+                        Your Pick: {{ pick.selected_fighter }}
+                        {% if pick.selected_method == "Decision" %}
+                          ({{ pick.selected_method }})
+                        {% else %}
+                          ({{ pick.selected_method }} – {{ pick.selected_round }})
+                        {% endif %}
                         <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-outline-primary btn-sm ms-2">Edit Pick</a>
                       </p>
                     {% else %}
                       <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-success btn-sm">Make Pick</a>
                     {% endif %}
                   {% endif %}
-                {% endif %}
 
-                {% if current_user.is_authenticated and current_user.is_admin %}
-                  <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn btn-outline-secondary btn-sm">Edit Fight</a>
-                  {% if not fight.winner %}
-                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-success btn-sm">Enter Result</a>
-                  {% else %}
-                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-warning btn-sm">Edit Result</a>
+                  {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn btn-outline-secondary btn-sm">Edit Fight</a>
+                    {% if fight.winner %}
+                      <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-warning btn-sm">Edit Result</a>
+                    {% else %}
+                      <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-success btn-sm">Enter Result</a>
+                    {% endif %}
+                    <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn btn-outline-danger btn-sm">Delete Fight</a>
                   {% endif %}
-                  <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn btn-outline-danger btn-sm">Delete Fight</a>
-                {% endif %}
-              </div>
-            </div>
-          {% endfor %}
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
         </div>
       </div>
     {% endfor %}
@@ -90,58 +96,105 @@
   {% endif %}
 </div>
 
-  <hr>
+<hr>
 
-  <h2>Past Events</h2>
+<h2>Past Events</h2>
 {% if past_events %}
   {% for event in past_events %}
     <div class="event-section">
-      <h3>{{ event.name }} ({{ event.date }})
-        <button class="btn btn-sm btn-outline-primary toggle-btn"
-        onclick="toggleEvent('{{ event.id }}')"
-        id="btn-{{ event.id }}">
-         +
-        </button>
+      <h3 class="event-toggle" onclick="toggleEvent('{{ event.id }}')">
+        <span>{{ event.name }} ({{ event.date }})</span>
+        <svg id="btn-{{ event.id }}" class="toggle-btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
+             xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 8L10 13L15 8" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </h3>
+      
       {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="{{ url_for('admin.update_event', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">Edit Event</a>
         <a href="{{ url_for('admin.delete_event', event_id=event.id) }}" class="btn btn-outline-danger btn-sm">Delete Event</a>
-        {% endif %}
+      {% endif %}
+
       <div class="fight-list" id="event-{{ event.id }}" style="display: none;">
-        {% for fight in event.fights %}
-          <div class="fight-item">
-            <p>
-              <strong>{{ fight.fighter1 }} vs {{ fight.fighter2 }}</strong> ({{ fight.date }})
-              {% if fight.winner %}
-                <br><strong>Result:</strong> {{ fight.winner }} won by {{ fight.method }} in {{ fight.round }}.
-              {% endif %}
-            </p>
-
-            {% set pick = picks_map.get(fight.id) %}
-            <div class="actions">
-              {% if current_user.is_authenticated and pick %}
-                <p>
-                  Your Pick: {{ pick.selected_fighter }} ({{ pick.selected_method }} – {{ pick.selected_round }})
-                  {% if fight.winner %}
-                    – <strong>Points:</strong> {{ pick.points_awarded }}
-                  {% endif %}
-                </p>
-              {% endif %}
-
-              {% if current_user.is_authenticated and current_user.is_admin %}
-                <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn btn-outline-secondary btn-sm">Edit Fight</a>
+        <ul class="fight-list list-group" data-event-id="{{ event.id }}">
+          {% for fight in event.fights %}
+            <li class="list-group-item d-flex justify-content-between align-items-center" data-fight-id="{{ fight.id }}">
+              <div>
+                <strong>{{ fight.fighter1 }} vs {{ fight.fighter2 }}</strong> ({{ fight.date }})
                 {% if fight.winner %}
-                  <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-warning btn-sm">Edit Result</a>
+                  <br><strong>Result:</strong>
+                  {{ fight.winner }} won by
+                  {% if fight.method == "Decision" %}
+                    {{ fight.method }}.
+                  {% else %}
+                    {{ fight.method }} in {{ fight.round }}.
+                  {% endif %}
                 {% endif %}
-                <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn btn-outline-danger btn-sm">Delete Fight</a>
-              {% endif %}
-            </div>
-          </div>
-        {% endfor %}
+              </div>
+
+              <div class="actions text-end">
+                {% set pick = picks_map.get(fight.id) %}
+                {% if current_user.is_authenticated and pick %}
+                  <p>
+                    Your Pick: {{ pick.selected_fighter }}
+                    {% if pick.selected_method == "Decision" %}
+                      ({{ pick.selected_method }})
+                    {% else %}
+                      ({{ pick.selected_method }} – {{ pick.selected_round }})
+                    {% endif %}
+                    {% if fight.winner %}
+                      – <strong>Points:</strong> {{ pick.points_awarded }}
+                    {% endif %}
+                  </p>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                  <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn btn-outline-secondary btn-sm">Edit Fight</a>
+                  {% if fight.winner %}
+                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-warning btn-sm">Edit Result</a>
+                  {% else %}
+                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-success btn-sm">Enter Result</a>
+                  {% endif %}
+                  <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn btn-outline-danger btn-sm">Delete Fight</a>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
   {% endfor %}
 {% else %}
   <p>No past events yet.</p>
 {% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+
+{% if current_user.is_authenticated and current_user.is_admin %}
+  <script>
+    document.querySelectorAll('.fight-list').forEach(list => {
+      const eventId = list.getAttribute('data-event-id');
+      if (!eventId) return;
+
+      new Sortable(list, {
+        animation: 150,
+        onEnd: () => {
+          const fightOrder = Array.from(list.querySelectorAll('[data-fight-id]'))
+                                  .map(li => li.getAttribute('data-fight-id'));
+          fetch(`/admin/reorder_fights/${eventId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(fightOrder.map(id => ['fight_order', id]))
+          }).then(() => {
+            console.log("Fight order updated.");
+          });
+        }
+      });
+    });
+  </script>
+{% endif %}
+
 {% endblock %}

@@ -7,25 +7,45 @@
   <form method="POST">
     {{ form.hidden_tag() }}
 
-    <div class="mb-3">
-      <label for="selected_fighter" class="form-label">Pick a Fighter</label>
-      {{ form.selected_fighter(class="form-select") }}
+    <!-- Fighter -->
+    <div class="mb-4">
+      <label class="form-label d-block">Pick a Fighter</label>
+      <div class="d-flex gap-4">
+        {% for subfield in form.selected_fighter %}
+          <div class="form-check">
+            {{ subfield(class="form-check-input", id=subfield.id) }}
+            <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+          </div>
+        {% endfor %}
+      </div>
       {% for error in form.selected_fighter.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
     </div>
 
-    <div class="mb-3">
-      <label for="selected_method" class="form-label">Method of Victory</label>
-      {{ form.selected_method(class="form-select") }}
+    <!-- Method of Victory -->
+    <div class="mb-4">
+      <label class="form-label d-block">Method of Victory</label>
+      {% for subfield in form.selected_method %}
+        <div class="form-check">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
       {% for error in form.selected_method.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
     </div>
 
-    <div class="mb-3">
-      <label for="selected_round" class="form-label">Round of Victory</label>
-      {{ form.selected_round(class="form-select") }}
+    <!-- Round of Victory -->
+    <div class="mb-4">
+      <label class="form-label d-block">Round of Victory</label>
+      {% for subfield in form.selected_round %}
+        <div class="form-check round-option" data-value="{{ subfield.data }}" id="round-wrapper-{{ subfield.id }}">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
       {% for error in form.selected_round.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
@@ -35,4 +55,43 @@
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
   </form>
 </div>
+
+<!-- JavaScript to toggle round options -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const methodRadios = document.querySelectorAll('input[name="selected_method"]');
+    const roundRadios = document.querySelectorAll('input[name="selected_round"]');
+
+    function updateRounds() {
+      const selectedMethod = [...methodRadios].find(r => r.checked)?.value;
+
+      roundRadios.forEach(radio => {
+        const wrapper = document.getElementById('round-wrapper-' + radio.id);
+
+        if (selectedMethod === 'Decision') {
+          if (radio.value === 'Decision') {
+            wrapper.style.display = 'block';
+            radio.checked = true;
+          } else {
+            wrapper.style.display = 'none';
+            radio.checked = false;
+          }
+        } else {
+          if (radio.value === 'Decision') {
+            wrapper.style.display = 'none';
+            radio.checked = false;
+          } else {
+            wrapper.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    methodRadios.forEach(radio => {
+      radio.addEventListener('change', updateRounds);
+    });
+
+    updateRounds(); // run on page load
+  });
+</script>
 {% endblock %}

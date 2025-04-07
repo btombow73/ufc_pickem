@@ -215,4 +215,141 @@ input:focus, select:focus, textarea:focus {
   text-align: center;
   }
   
+  .fight-list {
+    padding-left: 0;
+    margin-bottom: 0;
+  }
 
+  .fight-list .list-group-item {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .fight-list .list-group-item:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .fight-list .actions {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .fight-list .actions p {
+    margin-bottom: 0.25rem;
+  }
+
+  .fight-list strong {
+    font-weight: 600;
+  }
+
+  /* Buttons more compact */
+  .fight-list .btn-sm {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+/* Ensure fight-list responsiveness */
+.fight-list .list-group-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+@media (min-width: 576px) {
+  .fight-list .list-group-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .fight-list .actions {
+    flex-direction: column;
+    text-align: right;
+    align-items: flex-end;
+  }
+}
+
+/* Ensure event-section header is mobile-friendly */
+.event-section h3 {
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.toggle-btn-icon {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #0d6efd;
+  padding: 0;
+}
+.fight-list {
+  transition: all 0.3s ease;
+}
+
+.fight-list .list-group-item {
+  transition: box-shadow 0.2s ease;
+}
+
+.toggle-btn-icon {
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.event-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+@media (max-width: 575px) {
+  .event-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fight-list .list-group-item {
+    flex-direction: column;
+    align-items: flex-start;
+    transition: box-shadow 0.6s ease, transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .fight-list .actions {
+    width: 100%;
+    text-align: left;
+    margin-top: 0.5rem;
+  }
+}
+.fight-list .list-group-item:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transform: scale(1.015);
+}
+button:active, .btn:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease;
+}
+body {
+  opacity: 0;
+  animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}

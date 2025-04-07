@@ -7,41 +7,73 @@
   <form method="POST">
     {{ form.hidden_tag() }}
 
-    <div class="mb-3">
-      <label for="winner" class="form-label">Winner</label>
-      {{ form.winner(class="form-select") }}
+    <!-- Winner -->
+    <div class="mb-4">
+      <label class="form-label d-block">Winner</label>
+      <div class="d-flex gap-4">
+        {% for subfield in form.winner %}
+          <div class="form-check">
+            {{ subfield(class="form-check-input", id=subfield.id) }}
+            <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+          </div>
+        {% endfor %}
+      </div>
       {% for error in form.winner.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
     </div>
 
-    <div class="mb-3">
-      <label for="method" class="form-label">Method of Victory</label>
-      {{ form.method(class="form-select") }}
+    <!-- Method of Victory -->
+    <div class="mb-4">
+      <label class="form-label d-block">Method of Victory</label>
+      {% for subfield in form.method %}
+        <div class="form-check">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
       {% for error in form.method.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
     </div>
 
-    <div class="mb-3">
-      <label for="round" class="form-label">Round of Victory</label>
-      {{ form.round(class="form-select") }}
+    <!-- Round of Victory -->
+    <div class="mb-4">
+      <label class="form-label d-block">Round of Victory</label>
+      {% for subfield in form.round %}
+        <div class="form-check" id="round-wrapper-{{ subfield.id }}">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
       {% for error in form.round.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
     </div>
 
-    <div class="mb-3">
-      <label for="best_method" class="form-label">Best Odds Method (Book's Pick)</label>
-      {{ form.best_method(class="form-select") }}
+    <!-- Best Odds Method -->
+    <div class="mb-4">
+      <label class="form-label d-block">Best Odds Method (Book's Pick)</label>
+      {% for subfield in form.best_method %}
+        <div class="form-check">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
       {% for error in form.best_method.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
     </div>
 
-    <div class="mb-3">
-      <label for="best_round" class="form-label">Best Odds Round (Book's Pick)</label>
-      {{ form.best_round(class="form-select") }}
+    <!-- Best Odds Round -->
+    <div class="mb-4">
+      <label class="form-label d-block">Best Odds Round (Book's Pick)</label>
+      {% for subfield in form.best_round %}
+        <div class="form-check" id="book-round-wrapper-{{ subfield.id }}">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
       {% for error in form.best_round.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
@@ -51,4 +83,45 @@
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
   </form>
 </div>
+
+<!-- JavaScript for Decision logic -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const methodRadios = document.querySelectorAll('input[name="method"]');
+    const roundRadios = document.querySelectorAll('input[name="round"]');
+
+    const bestMethodRadios = document.querySelectorAll('input[name="best_method"]');
+    const bestRoundRadios = document.querySelectorAll('input[name="best_round"]');
+
+    function toggleRounds(methodRadios, roundRadios, prefix = 'round-wrapper-') {
+      const selected = [...methodRadios].find(r => r.checked)?.value;
+
+      roundRadios.forEach(radio => {
+        const wrapper = document.getElementById(prefix + radio.id);
+        if (selected === 'Decision') {
+          if (radio.value === 'Decision') {
+            wrapper.style.display = 'block';
+            radio.checked = true;
+          } else {
+            wrapper.style.display = 'none';
+            radio.checked = false;
+          }
+        } else {
+          if (radio.value === 'Decision') {
+            wrapper.style.display = 'none';
+            radio.checked = false;
+          } else {
+            wrapper.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    methodRadios.forEach(r => r.addEventListener('change', () => toggleRounds(methodRadios, roundRadios)));
+    bestMethodRadios.forEach(r => r.addEventListener('change', () => toggleRounds(bestMethodRadios, bestRoundRadios, 'book-round-wrapper-')));
+
+    toggleRounds(methodRadios, roundRadios);
+    toggleRounds(bestMethodRadios, bestRoundRadios, 'book-round-wrapper-');
+  });
+</script>
 {% endblock %}

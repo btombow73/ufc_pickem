@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-4">Add or Update Fight</h2>
+  <h2 class="mb-4">Add New Fight</h2>
 
   <form method="POST">
     {{ form.hidden_tag() }}
@@ -25,22 +25,48 @@
       {{ form.date(class="form-control") }}
     </div>
 
+    <!-- Number of Rounds -->
+    <div class="mb-3">
+      <label class="form-label d-block">Number of Rounds</label>
+      {% for subfield in form.fight_rounds %}
+        <div class="form-check">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
+    </div>
+
     <!-- Favorite Fighter -->
     <div class="mb-3">
-      {{ form.favorite.label(class="form-label") }}
-      {{ form.favorite(class="form-select") }}
+      <label class="form-label d-block">Favorite Fighter</label>
+      {% for subfield in form.favorite %}
+        <div class="form-check">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
     </div>
 
-    <!-- Best Method -->
+    <!-- Book Method -->
     <div class="mb-3">
-      {{ form.best_method.label(class="form-label") }}
-      {{ form.best_method(class="form-select") }}
+      <label class="form-label d-block">Book Method</label>
+      {% for subfield in form.best_method %}
+        <div class="form-check">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
     </div>
 
-    <!-- Best Round -->
+    <!-- Book Round -->
     <div class="mb-3">
-      {{ form.best_round.label(class="form-label") }}
-      {{ form.best_round(class="form-select") }}
+      <label class="form-label d-block">Book Round</label>
+      {% for subfield in form.best_round %}
+        <div class="form-check" id="round-wrapper-{{ subfield.id }}">
+          {{ subfield(class="form-check-input", id=subfield.id) }}
+          <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+        </div>
+      {% endfor %}
     </div>
 
     <!-- Event -->
@@ -56,4 +82,43 @@
     </div>
   </form>
 </div>
+
+<!-- JavaScript: Auto-toggle Book Round if Method is Decision -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const methodRadios = document.querySelectorAll('input[name="best_method"]');
+    const roundRadios = document.querySelectorAll('input[name="best_round"]');
+
+    function updateRoundVisibility() {
+      const selectedMethod = [...methodRadios].find(r => r.checked)?.value;
+
+      roundRadios.forEach(radio => {
+        const wrapper = document.getElementById('round-wrapper-' + radio.id);
+
+        if (selectedMethod === 'Decision') {
+          if (radio.value === 'Decision') {
+            wrapper.style.display = 'block';
+            radio.checked = true;
+          } else {
+            wrapper.style.display = 'none';
+            radio.checked = false;
+          }
+        } else {
+          if (radio.value === 'Decision') {
+            wrapper.style.display = 'none';
+            radio.checked = false;
+          } else {
+            wrapper.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    methodRadios.forEach(radio => {
+      radio.addEventListener('change', updateRoundVisibility);
+    });
+
+    updateRoundVisibility(); // Run on page load
+  });
+</script>
 {% endblock %}

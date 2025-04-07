@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Reorder Fights for {{ event.name }}</h2>
+
+  <form method="POST" id="reorderForm">
+    <ul class="list-group mb-4" id="sortable-list">
+      {% for fight in fights %}
+        <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ fight.id }}">
+          {{ fight.fighter1 }} vs {{ fight.fighter2 }}
+          <span class="text-muted">[Current Order: {{ fight.order }}]</span>
+          <input type="hidden" name="fight_order" value="{{ fight.id }}">
+        </li>
+      {% endfor %}
+    </ul>
+
+    <button type="submit" class="btn btn-primary">Save Order</button>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+
+<!-- Sortable JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+
+<script>
+  $(function () {
+    $("#sortable-list").sortable({
+      update: function () {
+        const newOrder = $("#sortable-list").sortable("toArray", { attribute: "data-id" });
+        $("input[name='fight_order']").each(function (index) {
+          $(this).val(newOrder[index]);
+        });
+      }
+    });
+    $("#sortable-list").disableSelection();
+  });
+</script>
+{% endblock %}

@@ -7,6 +7,8 @@ from .extensions import db
 from .mailgun_utils import send_verification_email
 from datetime import datetime
 import secrets
+from zoneinfo import ZoneInfo
+
 
 main = Blueprint('main', __name__)
 
@@ -83,12 +85,17 @@ def dashboard():
     upcoming_events = [event for event in events if event.date >= datetime.utcnow().date()]
     past_events = [event for event in events if event.date < datetime.utcnow().date()]
 
+    # Sort fights by order with fallback to 9999 for None
+    for event in events:
+        event.fights = sorted(event.fights, key=lambda f: f.order if f.order is not None else 9999)
+
     picks_map = {}
     if current_user.is_authenticated:
         user_picks = Pick.query.filter_by(user_id=current_user.id).all()
         picks_map = {pick.fight_id: pick for pick in user_picks}
 
     return render_template('dashboard.html', upcoming_events=upcoming_events, past_events=past_events, picks_map=picks_map)
+
 
 
 @main.route('/picks/<int:fight_id>', methods=['GET', 'POST'])
@@ -104,6 +111,12 @@ def picks(fight_id):
         return redirect(url_for('main.dashboard'))
 
     form = PickForm()
+    # Dynamically set the available rounds based on admin selection
+    form.selected_round.choices = [(str(i), f"Round {i}") for i in range(1, fight.fight_rounds + 1)]
+    if 'Decision' not in [r[0] for r in form.selected_round.choices]:
+        form.selected_round.choices.append(('Decision', 'Decision'))
+
+
     form.selected_fighter.choices = [
         (fight.fighter1, fight.fighter1),
         (fight.fighter2, fight.fighter2)

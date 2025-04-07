@@ -43,13 +43,12 @@ class Fight(db.Model):
     fighter2 = db.Column(db.String(100), nullable=False)
     date = db.Column(db.Date, nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
-
     favorite = db.Column(db.String(100), nullable=False)
     winner = db.Column(db.String(100), nullable=True)
     method = db.Column(db.String(100), nullable=True)
     round = db.Column(db.String(100), nullable=True)
-
-    # Admin-defined best picks for the "Book" user
+    fight_rounds = db.Column(db.Integer, nullable=False, default=3)
+    order = db.Column(db.Integer, default=0)
     best_method = db.Column(db.String(100), nullable=True)
     best_round = db.Column(db.String(100), nullable=True)
 
@@ -66,7 +65,6 @@ class Pick(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     fight_id = db.Column(db.Integer, db.ForeignKey('fight.id'), nullable=False)
-    
     selected_fighter = db.Column(db.String(100), nullable=False)
     selected_method = db.Column(db.String(100), nullable=True)
     selected_round = db.Column(db.String(100), nullable=True)

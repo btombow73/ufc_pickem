@@ -131,12 +131,28 @@ def add_fight():
         )
         db.session.add(new_fight)
         db.session.commit()
+
+        # ✅ Automatically create Book's pick
+        book_user = User.query.filter_by(username='Book').first()
+        if book_user:
+            book_pick = Pick(
+                user_id=book_user.id,
+                fight_id=new_fight.id,
+                selected_fighter=favorite_name,
+                selected_method=form.best_method.data,
+                selected_round=form.best_round.data
+            )
+            db.session.add(book_pick)
+            db.session.commit()
+        else:
+            flash("Book user not found. Book pick not created.", "warning")
+
         flash("Fight added successfully!", "success")
         return redirect(url_for('main.dashboard'))
-    if request.method == 'POST':
-     print("Form submitted with POST")
-     print("Form errors:", form.errors)
 
+    if request.method == 'POST':
+        print("Form submitted with POST")
+        print("Form errors:", form.errors)
 
     return render_template('add_fight.html', form=form)
 

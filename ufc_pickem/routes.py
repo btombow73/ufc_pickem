@@ -81,25 +81,34 @@ def resend_verification():
 
 
 @main.route('/dashboard')
+@login_required
 def dashboard():
     events = Event.query.all()
     upcoming_events = [event for event in events if not event.is_archived]
     past_events = [event for event in events if event.is_archived]
 
+    # Sort fights by order with fallback to 9999 for None
     for event in events:
         event.fights = sorted(event.fights, key=lambda f: f.order if f.order is not None else 9999)
 
+    # Get current user's picks
     picks_map = {}
     if current_user.is_authenticated:
         user_picks = Pick.query.filter_by(user_id=current_user.id).all()
         picks_map = {pick.fight_id: pick for pick in user_picks}
 
-    # ✅ Get Book picks
-    book_user = User.query.filter_by(username='Book').first()
+    # ✅ Fix: Get Book user's picks, joined with fights
     book_picks_map = {}
+    book_user = User.query.filter_by(username="Book").first()
     if book_user:
-        book_picks = Pick.query.filter_by(user_id=book_user.id).all()
-        book_picks_map = {pick.fight_id: pick for pick in book_picks}
+        book_picks = (
+            Pick.query
+            .filter_by(user_id=book_user.id)
+            .join(Pick.fight)
+            .all()
+        )
+        for pick in book_picks:
+            book_picks_map[pick.fight_id] = pick
 
     return render_template(
         'dashboard.html',

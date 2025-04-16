@@ -70,6 +70,19 @@
             
               <div class="actions text-end">
                 {% set pick = picks_map.get(fight.id) %}
+                <!-- ✅ Always show Book Pick if available -->
+                {% set book_pick = book_picks_map.get(fight.id) %}
+                {% if book_pick %}
+                  <p class="book-pick text-primary fw-semibold">
+                    🧠 Book Pick: {{ book_pick.selected_fighter }}
+                    {% if book_pick.selected_method == "Decision" %}
+                      ({{ book_pick.selected_method }})
+                    {% else %}
+                      ({{ book_pick.selected_method }} – {{ book_pick.selected_round }})
+                    {% endif %}
+                  </p>
+                {% endif %}
+
                 {% if current_user.is_authenticated and not current_user.is_admin and not fight.winner %}
                   {% if fight.event.is_locked %}
                     {% if pick %}
@@ -101,19 +114,6 @@
                       <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-success btn-sm">Make Pick</a>
                     {% endif %}
                   {% endif %}
-                {% endif %}
-            
-                <!-- ✅ Always show Book Pick if available -->
-                {% set book_pick = book_picks_map.get(fight.id) %}
-                {% if book_pick %}
-                  <p class="book-pick text-primary fw-semibold">
-                     Book Pick: {{ book_pick.selected_fighter }}
-                    {% if book_pick.selected_method == "Decision" %}
-                      ({{ book_pick.selected_method }})
-                    {% else %}
-                      ({{ book_pick.selected_method }} – {{ book_pick.selected_round }})
-                    {% endif %}
-                  </p>
                 {% endif %}
             
                 {% if current_user.is_authenticated and current_user.is_admin %}

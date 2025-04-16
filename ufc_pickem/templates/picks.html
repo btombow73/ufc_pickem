@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if not fight.event.is_locked %}
 <div class="container mt-4">
   <h2 class="mb-4">Make Your Pick: {{ fight.fighter1 }} vs {{ fight.fighter2 }}</h2>
 
@@ -94,4 +95,9 @@
     updateRounds(); // run on page load
   });
 </script>
+  {% else %}
+  <div class="alert alert-danger">
+    Picks for this event are locked.
+  </div>
+{% endif %}
 {% endblock %}

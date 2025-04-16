@@ -27,13 +27,13 @@ class Event(db.Model):
     __tablename__ = 'event'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
-    date = db.Column(db.Date, nullable=False)
-
+    is_locked = db.Column(db.Boolean, default=False)
+    is_archived = db.Column(db.Boolean, default=False)
     # One event to many fights
     fights = db.relationship('Fight', back_populates='event', cascade='all, delete-orphan')
 
     def __repr__(self):
-        return f"Event('{self.name}', date={self.date})"
+        return f"Event('{self.name}')"
 
 
 class Fight(db.Model):
@@ -58,6 +58,42 @@ class Fight(db.Model):
 
     def __repr__(self):
         return f"Fight('{self.fighter1} vs {self.fighter2}', date={self.date})"
+
+class Fighter(db.Model):
+    __tablename__ = 'fighters'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    nickname = db.Column(db.String(255))
+    weight_class = db.Column(db.String(100))
+    record = db.Column(db.String(100))
+    knockouts = db.Column(db.String(100))
+    submissions = db.Column(db.String(100))
+    first_round_finishes = db.Column(db.String(100))
+    takedown_accuracy = db.Column(db.String(100))
+    striking_accuracy = db.Column(db.String(100))
+    sig_str_landed_total = db.Column(db.String(100))
+    sig_str_attempted_total = db.Column(db.String(100))
+    takedowns_landed_total = db.Column(db.String(100))
+    takedowns_attempted_total = db.Column(db.String(100))
+    sig_strikes_per_min = db.Column(db.String(100))
+    takedown_avg_per_min = db.Column(db.String(100))
+    sig_str_def = db.Column(db.String(100))
+    knockdown_avg = db.Column(db.String(100))
+    sig_strikes_absorbed_per_min = db.Column(db.String(100))
+    sub_avg_per_min = db.Column(db.String(100))
+    takedown_def = db.Column(db.String(100))
+    avg_fight_time = db.Column(db.String(100))
+    sig_strikes_while_standing = db.Column(db.String(100))
+    sig_strikes_while_clinched = db.Column(db.String(100))
+    sig_strikes_while_grounded = db.Column(db.String(100))
+    win_by_ko_tko = db.Column(db.String(100))
+    win_by_decision = db.Column(db.String(100))
+    win_by_submission = db.Column(db.String(100))
+    image_url = db.Column(db.String(500))
+
+    def __repr__(self):
+        return f"<Fighter {self.name}>"
 
 
 class Pick(db.Model):

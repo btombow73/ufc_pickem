@@ -49,21 +49,18 @@ class PickForm(FlaskForm):
 class FightForm(FlaskForm):
     fighter1 = StringField('Fighter 1', validators=[DataRequired()])
     fighter2 = StringField('Fighter 2', validators=[DataRequired()])
-    
-    fight_rounds = RadioField('Number of Rounds', choices=[('3', '3 Rounds'), ('5', '5 Rounds')], default='3')
+    fight_rounds = RadioField("Number of Rounds", choices=[ ('3', '3 Rounds'), ('5', '5 Rounds') ], validators=[DataRequired()])
     date = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
     order = IntegerField('Order')  
     favorite = RadioField('Favorite Fighter', choices=[
         ('fighter1', 'Fighter 1'),
         ('fighter2', 'Fighter 2')
     ], validators=[DataRequired()])
-
     best_method = RadioField('Book Method', choices=[
         ('KO/TKO', 'KO/TKO'),
         ('Submission', 'Submission'),
         ('Decision', 'Decision')
     ], default='Decision')
-
     best_round = RadioField('Book Round', choices=[
         ('1', 'Round 1'), 
         ('2', 'Round 2'), 
@@ -72,7 +69,6 @@ class FightForm(FlaskForm):
         ('5', 'Round 5'),
         ('Decision', 'Decision')
     ], default='Decision')
-
     event_id = SelectField('Event', coerce=int, choices=[], validators=[DataRequired()])
     submit = SubmitField('Save Fight')
 
@@ -131,9 +127,8 @@ class DeleteFightForm(FlaskForm):
 
 class EventForm(FlaskForm):
     name = StringField('Event Name', validators=[DataRequired()])
-    date = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
     submit = SubmitField('Create Event')
-
+    
     def validate_name(self, name):
         event = Event.query.filter_by(name=name.data).first()
         if event:

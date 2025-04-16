@@ -8,7 +8,8 @@ from .mailgun_utils import send_verification_email
 from datetime import datetime
 import secrets
 from zoneinfo import ZoneInfo
-
+import pandas as pd
+import os
 
 main = Blueprint('main', __name__)
 
@@ -81,11 +82,10 @@ def resend_verification():
 
 @main.route('/dashboard')
 def dashboard():
-    events = Event.query.order_by(Event.date.desc()).all()
-    upcoming_events = [event for event in events if event.date >= datetime.utcnow().date()]
-    past_events = [event for event in events if event.date < datetime.utcnow().date()]
+    events = Event.query.all()
+    upcoming_events = [event for event in events if not event.is_archived]
+    past_events = [event for event in events if event.is_archived]
 
-    # Sort fights by order with fallback to 9999 for None
     for event in events:
         event.fights = sorted(event.fights, key=lambda f: f.order if f.order is not None else 9999)
 
@@ -94,8 +94,20 @@ def dashboard():
         user_picks = Pick.query.filter_by(user_id=current_user.id).all()
         picks_map = {pick.fight_id: pick for pick in user_picks}
 
-    return render_template('dashboard.html', upcoming_events=upcoming_events, past_events=past_events, picks_map=picks_map)
+    # ✅ Get Book picks
+    book_user = User.query.filter_by(username='Book').first()
+    book_picks_map = {}
+    if book_user:
+        book_picks = Pick.query.filter_by(user_id=book_user.id).all()
+        book_picks_map = {pick.fight_id: pick for pick in book_picks}
 
+    return render_template(
+        'dashboard.html',
+        upcoming_events=upcoming_events,
+        past_events=past_events,
+        picks_map=picks_map,
+        book_picks_map=book_picks_map
+    )
 
 
 @main.route('/picks/<int:fight_id>', methods=['GET', 'POST'])
@@ -105,17 +117,21 @@ def picks(fight_id):
         flash("Please verify your email to make picks.", "warning")
         return redirect(url_for('main.dashboard'))
 
+    # Fetch the fight data
     fight = Fight.query.get_or_404(fight_id)
+    event = fight.event
+    if event.is_locked:
+        flash("Picks for this event are locked.", "warning")
+        return redirect(url_for('main.dashboard'))
+
     if fight.winner:
         flash('This fight already has a result; picks are closed.', 'warning')
         return redirect(url_for('main.dashboard'))
 
     form = PickForm()
-    # Dynamically set the available rounds based on admin selection
     form.selected_round.choices = [(str(i), f"Round {i}") for i in range(1, fight.fight_rounds + 1)]
     if 'Decision' not in [r[0] for r in form.selected_round.choices]:
         form.selected_round.choices.append(('Decision', 'Decision'))
-
 
     form.selected_fighter.choices = [
         (fight.fighter1, fight.fighter1),
@@ -128,6 +144,7 @@ def picks(fight_id):
             form.selected_fighter.data = existing_pick.selected_fighter
             form.selected_method.data = existing_pick.selected_method
             form.selected_round.data = existing_pick.selected_round
+
 
     if form.validate_on_submit():
         pick = Pick.query.filter_by(user_id=current_user.id, fight_id=fight.id).first()
@@ -149,7 +166,7 @@ def picks(fight_id):
         flash('Your pick has been saved!', 'success')
         return redirect(url_for('main.dashboard'))
 
-    return render_template('picks.html', fight=fight, form=form)
+    return render_template("picks.html", fight=fight, form=form)
 
 
 @main.route('/profile/<int:user_id>')
@@ -161,20 +178,61 @@ def profile(user_id):
 
     user = User.query.get_or_404(user_id)
     if user.id != current_user.id and not current_user.is_admin:
-        flash('You are not authorized to view this profile.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        pass  # Let anyone view profiles
 
-    picks = Pick.query.filter_by(user_id=user.id).all()
-    for pick in picks:
-        if pick.fight.winner is None:
-            pick.is_correct = None
-            pick.score = None
-        else:
-            pick.is_correct = (pick.selected_fighter == pick.fight.winner)
-            pick.score = pick.points_awarded if pick.points_awarded is not None else 0
+    selected_event_id = request.args.get('event_id', type=int)
 
-    return render_template('profile.html', user=user, picks=picks)
+    all_picks = (
+        Pick.query
+        .filter_by(user_id=user.id)
+        .join(Pick.fight)
+        .join(Fight.event)
+        .all()
+    )
 
+    # Only show picks if the event is locked or the fight result is known
+    filtered_picks = []
+    for pick in all_picks:
+        event = pick.fight.event
+        if pick.fight.winner is not None or event.is_locked:
+            if pick.fight.winner is None:
+                pick.is_correct = None
+                pick.score = None
+            else:
+                pick.is_correct = (pick.selected_fighter == pick.fight.winner)
+                pick.score = pick.points_awarded if pick.points_awarded is not None else 0
+            filtered_picks.append(pick)
+
+    # Group picks by event
+    grouped_picks = {}
+    events_by_id = {}
+
+    for pick in filtered_picks:
+        event = pick.fight.event
+        if selected_event_id and event.id != selected_event_id:
+            continue
+        if event.id not in grouped_picks:
+            grouped_picks[event.id] = []
+            events_by_id[event.id] = event
+        grouped_picks[event.id].append(pick)
+
+    # Sort events (by ID for now) and fights by order
+    grouped_picks = dict(sorted(grouped_picks.items(), key=lambda item: item[0], reverse=True))
+    for pick_list in grouped_picks.values():
+        pick_list.sort(key=lambda p: p.fight.order if p.fight.order is not None else 9999)
+
+    # For event dropdown filter
+    all_events = sorted({p.fight.event for p in filtered_picks}, key=lambda e: e.id, reverse=True)
+    events_by_id = {e.id: e for e in all_events}
+
+    return render_template(
+        'profile.html',
+        user=user,
+        grouped_picks=grouped_picks,
+        events=all_events,
+        selected_event_id=selected_event_id,
+        events_by_id=events_by_id
+    )
 
 @main.route('/leaderboard')
 @login_required
@@ -183,14 +241,40 @@ def leaderboard():
         flash("Please verify your email to view the leaderboard.", "warning")
         return redirect(url_for('main.dashboard'))
 
-    users = User.query.all()
-    for user in users:
-        user.points = sum(p.points_awarded for p in user.picks)
+    # Fetch all events ordered by most recent (highest ID first)
+    events = Event.query.order_by(Event.id.desc()).all()
+    selected_event_id = request.args.get('event_id', type=int)
 
-    users.sort(key=lambda u: u.points, reverse=True)
+    # If no event selected, default to most recent (if any exist)
+    if selected_event_id is None and events:
+        selected_event_id = events[0].id
 
+    filtered_leaderboard = []
+    selected_event = None
+
+    if selected_event_id == 0:  # 0 will represent "All Events"
+        # Lifetime leaderboard
+        users = User.query.all()
+        for user in users:
+            user.points = sum(p.points_awarded or 0 for p in user.picks)
+        filtered_leaderboard = sorted(users, key=lambda u: u.points, reverse=True)
+    else:
+        # Filter by single event
+        selected_event = Event.query.get(selected_event_id)
+        if selected_event:
+            event_scores = {}
+            for fight in selected_event.fights:
+                for pick in fight.picks:
+                    event_scores[pick.user_id] = event_scores.get(pick.user_id, 0) + (pick.points_awarded or 0)
+            for user_id, points in event_scores.items():
+                user = User.query.get(user_id)
+                if user:
+                    user.points = points
+                    filtered_leaderboard.append(user)
+            filtered_leaderboard.sort(key=lambda u: u.points, reverse=True)
+
+    # Top performer per event
     event_winners = []
-    events = Event.query.all()
     for event in events:
         user_scores = {}
         for fight in event.fights:
@@ -206,4 +290,10 @@ def leaderboard():
                     'points': user_scores[top_user_id]
                 })
 
-    return render_template('leaderboard.html', leaderboard=users, event_winners=event_winners)
+    return render_template(
+        'leaderboard.html',
+        leaderboard=filtered_leaderboard,
+        events=events,
+        selected_event_id=selected_event_id,
+        event_winners=event_winners
+    )

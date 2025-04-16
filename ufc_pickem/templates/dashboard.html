@@ -27,7 +27,7 @@
     {% for event in upcoming_events %}
       <div class="event-section">
         <h3 class="event-toggle" onclick="toggleEvent('{{ event.id }}')">
-          <span>{{ event.name }} ({{ event.date }})</span>
+          <span>{{ event.name }}</span>
           <svg id="btn-{{ event.id }}" class="toggle-btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
                xmlns="http://www.w3.org/2000/svg">
             <path d="M5 8L10 13L15 8" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -35,6 +35,17 @@
         </h3>
         {% if current_user.is_authenticated and current_user.is_admin %}
           <div class="mb-2">
+
+            <form method="POST" action="{{ url_for('admin.toggle_lock', event_id=event.id) }}" style="display: inline;">
+              <button class="btn btn-outline-secondary btn-sm" type="submit">
+                {{ 'Unlock Picks' if event.is_locked else 'Lock Picks' }}
+              </button>
+            </form>            
+            <form method="POST" action="{{ url_for('admin.toggle_archive', event_id=event.id) }}" style="display: inline;">
+              <button class="btn btn-outline-secondary btn-sm" type="submit">
+                {{ 'Move to Past Events' if not event.is_archived else 'Move to Upcoming Events' }}
+              </button>
+            </form>            
             <a href="{{ url_for('admin.update_event', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">Edit Event</a>
             <a href="{{ url_for('admin.delete_event', event_id=event.id) }}" class="btn btn-outline-danger btn-sm">Delete Event</a>
           </div>
@@ -43,26 +54,42 @@
         <div class="fight-list" id="event-{{ event.id }}" style="display: block;">
           <ul class="fight-list list-group" data-event-id="{{ event.id }}">
             {% for fight in event.fights %}
-              <li class="list-group-item d-flex justify-content-between align-items-center" data-fight-id="{{ fight.id }}">
-                <div>
-                  <strong>{{ fight.fighter1 }} vs {{ fight.fighter2 }}</strong>
-                  {% if fight.winner %}
-                    <br><strong>Result:</strong>
-                    {{ fight.winner }} won by
-                    {% if fight.method == "Decision" %}
-                      {{ fight.method }}.
-                    {% else %}
-                      {{ fight.method }} in {{ fight.round }}.
-                    {% endif %}
+            <li class="list-group-item d-flex justify-content-between align-items-center" data-fight-id="{{ fight.id }}">
+              <div>
+                <strong>{{ fight.fighter1 }} vs {{ fight.fighter2 }}</strong>
+                {% if fight.winner %}
+                  <br><strong>Result:</strong>
+                  {{ fight.winner }} won by
+                  {% if fight.method == "Decision" %}
+                    {{ fight.method }}.
+                  {% else %}
+                    {{ fight.method }} in {{ fight.round }}.
                   {% endif %}
-                </div>
-
-                <div class="actions text-end">
-                  {% if current_user.is_authenticated and not current_user.is_admin and not fight.winner %}
-                    {% set pick = picks_map.get(fight.id) %}
+                {% endif %}
+              </div>
+            
+              <div class="actions text-end">
+                {% set pick = picks_map.get(fight.id) %}
+                {% if current_user.is_authenticated and not current_user.is_admin and not fight.winner %}
+                  {% if fight.event.is_locked %}
+                    {% if pick %}
+                      <p class="text-muted mb-0">
+                        <i class="fas fa-lock me-1"></i> <strong>Your Pick:</strong> {{ pick.selected_fighter }}
+                        {% if pick.selected_method == "Decision" %}
+                          ({{ pick.selected_method }})
+                        {% else %}
+                          ({{ pick.selected_method }} – {{ pick.selected_round }})
+                        {% endif %}
+                      </p>
+                    {% else %}
+                      <p class="text-muted mb-0">
+                        <i class="fas fa-lock me-1"></i> <em>You didn’t make a pick for this fight.</em>
+                      </p>
+                    {% endif %}
+                  {% else %}
                     {% if pick %}
                       <p>
-                        Your Pick: {{ pick.selected_fighter }}
+                        <strong>Your Pick:</strong> {{ pick.selected_fighter }}
                         {% if pick.selected_method == "Decision" %}
                           ({{ pick.selected_method }})
                         {% else %}
@@ -74,18 +101,33 @@
                       <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-success btn-sm">Make Pick</a>
                     {% endif %}
                   {% endif %}
-
-                  {% if current_user.is_authenticated and current_user.is_admin %}
-                    <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn btn-outline-secondary btn-sm">Edit Fight</a>
-                    {% if fight.winner %}
-                      <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-warning btn-sm">Edit Result</a>
+                {% endif %}
+            
+                <!-- ✅ Always show Book Pick if available -->
+                {% set book_pick = book_picks_map.get(fight.id) %}
+                {% if book_pick %}
+                  <p class="book-pick text-primary fw-semibold">
+                     Book Pick: {{ book_pick.selected_fighter }}
+                    {% if book_pick.selected_method == "Decision" %}
+                      ({{ book_pick.selected_method }})
                     {% else %}
-                      <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-success btn-sm">Enter Result</a>
+                      ({{ book_pick.selected_method }} – {{ book_pick.selected_round }})
                     {% endif %}
-                    <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn btn-outline-danger btn-sm">Delete Fight</a>
+                  </p>
+                {% endif %}
+            
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                  <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn btn-outline-secondary btn-sm">Edit Fight</a>
+                  {% if fight.winner %}
+                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-warning btn-sm">Edit Result</a>
+                  {% else %}
+                    <a href="{{ url_for('admin.fight_result', fight_id=fight.id) }}" class="btn btn-outline-success btn-sm">Enter Result</a>
                   {% endif %}
-                </div>
-              </li>
+                  <a href="{{ url_for('admin.delete_fight', fight_id=fight.id) }}" class="btn btn-outline-danger btn-sm">Delete Fight</a>
+                {% endif %}
+              </div>
+            </li>
+            
             {% endfor %}
           </ul>
         </div>
@@ -103,7 +145,7 @@
   {% for event in past_events %}
     <div class="event-section">
       <h3 class="event-toggle" onclick="toggleEvent('{{ event.id }}')">
-        <span>{{ event.name }} ({{ event.date }})</span>
+        <span>{{ event.name }} </span>
         <svg id="btn-{{ event.id }}" class="toggle-btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
              xmlns="http://www.w3.org/2000/svg">
           <path d="M5 8L10 13L15 8" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

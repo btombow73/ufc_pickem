@@ -18,6 +18,9 @@ def confirm_verification_token(token, expiration=3600):
         return False
     return email
 
+
+
+
 def send_verification_email(user):
     s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     token = s.dumps({'user_id': user.id})
@@ -30,6 +33,14 @@ def send_verification_email(user):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
+def safe_float(val):
+    try:
+        if isinstance(val, str) and '%' in val:
+            return float(val.strip('%')) / 100
+        return float(val)  # Convert to float
+    except (ValueError, TypeError):
+        return 0.0  # Return 0 if there's an issue with conversion
+
 def resize_and_save_avatar(file, user_id):
     filename = secure_filename(f"user_{user_id}.png")
     filepath = os.path.join('static', 'uploads', filename)
@@ -38,5 +49,7 @@ def resize_and_save_avatar(file, user_id):
     image = image.convert("RGB")
     image.thumbnail((300, 300))
     image.save(filepath, format='PNG')
+
+
 
     return filename

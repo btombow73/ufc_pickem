@@ -5,6 +5,7 @@ from .models import Fight, Pick, Event, User
 from .extensions import db
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+import os
 
 admin = Blueprint('admin', __name__)
 
@@ -19,37 +20,32 @@ def add_event():
         return redirect(url_for('main.dashboard'))
     form = EventForm()
     if form.validate_on_submit():
-        new_event = Event(name=form.name.data, date=form.date.data)
+        new_event = Event(name=form.name.data)
         db.session.add(new_event)
         db.session.commit()
         flash("Event created successfully!", "success")
         return redirect(url_for('main.dashboard'))
     return render_template('add_event.html', form=form)
 
-@admin.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
+@admin.route('/update_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def update_event(event_id):
-    if not is_admin():
-        flash("Access denied", "danger")
+    if not current_user.is_admin:
+        flash("Unauthorized", "danger")
         return redirect(url_for('main.dashboard'))
 
     event = Event.query.get_or_404(event_id)
-    form = EventForm()
-
-    if request.method == 'GET':
-        # Pre-fill form with current values
-        form.name.data = event.name
-        form.date.data = event.date
+    form = EventForm(obj=event)
+    print(form.errors)
 
     if form.validate_on_submit():
-        # Update values from form
         event.name = form.name.data
-        event.date = form.date.data
         db.session.commit()
         flash("Event updated successfully!", "success")
         return redirect(url_for('main.dashboard'))
 
     return render_template('update_event.html', form=form, event=event)
+
 
 
 @admin.route('/event/<int:event_id>/delete', methods=['GET', 'POST'])
@@ -74,6 +70,31 @@ def delete_event(event_id):
 
     return render_template('delete_event.html', event=event, form=form)
 
+@admin.route('/toggle_lock/<int:event_id>', methods=['POST'])
+@login_required
+def toggle_lock(event_id):
+    if not current_user.is_admin:
+        flash('Unauthorized', 'danger')
+        return redirect(url_for('main.dashboard'))
+
+    event = Event.query.get_or_404(event_id)
+    event.is_locked = not event.is_locked
+    db.session.commit()
+
+    flash(f"{'Locked' if event.is_locked else 'Unlocked'} picks for {event.name}", 'success')
+    return redirect(request.referrer or url_for('main.dashboard'))
+
+@admin.route('/toggle_archive/<int:event_id>', methods=['POST'])
+@login_required
+def toggle_archive(event_id):
+    if not current_user.is_admin:
+        abort(403)
+    event = Event.query.get_or_404(event_id)
+    event.is_archived = not event.is_archived
+    db.session.commit()
+    flash(f"Event '{event.name}' moved to {'past' if event.is_archived else 'upcoming'} events.", "info")
+    return redirect(url_for('main.dashboard'))
+
 
 @admin.route('/add_fight', methods=['GET', 'POST'])
 @login_required
@@ -81,35 +102,43 @@ def add_fight():
     if not is_admin():
         flash("Access denied", "danger")
         return redirect(url_for('main.dashboard'))
-    events = Event.query.order_by(Event.date).all()
+
+    events = Event.query.all()
     if not events:
         flash("No events available. Create an event first.", "warning")
         return redirect(url_for('admin.add_event'))
-    
+
     form = FightForm()
     form.event_id.choices = [(event.id, event.name) for event in events]
-    
+
     if form.validate_on_submit():
         favorite_name = form.fighter1.data if form.favorite.data == 'fighter1' else form.fighter2.data
-        event = Event.query.get(form.event_id.data)
-        
+        selected_event = Event.query.get(form.event_id.data)
+
+        max_order = db.session.query(db.func.max(Fight.order)).filter_by(event_id=selected_event.id).scalar()
+        next_order = (max_order + 1) if max_order is not None else 0
+
         new_fight = Fight(
             fighter1=form.fighter1.data,
             fighter2=form.fighter2.data,
-            fight_rounds=int(form.fight_rounds.data),  # New field from form
+            fight_rounds=int(form.fight_rounds.data),
             date=form.date.data,
             favorite=favorite_name,
-            event=event,
+            event=selected_event,
             best_method=form.best_method.data,
-            best_round=form.best_round.data
+            best_round=form.best_round.data,
+            order=next_order
         )
         db.session.add(new_fight)
         db.session.commit()
         flash("Fight added successfully!", "success")
         return redirect(url_for('main.dashboard'))
-    
-    return render_template('add_fight.html', form=form)
+    if request.method == 'POST':
+     print("Form submitted with POST")
+     print("Form errors:", form.errors)
 
+
+    return render_template('add_fight.html', form=form)
 
 @admin.route('/fight/<int:fight_id>/update', methods=['GET', 'POST'])
 @login_required
@@ -119,7 +148,6 @@ def update_fight(fight_id):
         return redirect(url_for('main.dashboard'))
 
     fight = Fight.query.get_or_404(fight_id)
-    events = Event.query.order_by(Event.date).all()
     form = FightForm()
     form.event_id.choices = [(event.id, event.name) for event in events]
 

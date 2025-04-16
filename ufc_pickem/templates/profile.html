@@ -2,42 +2,65 @@
 
 {% block content %}
   <h2>{{ user.username }}'s Profile</h2>
-  <p>Email: {{ user.email }}</p>
-  <h3>Pick History</h3>
-  {% if picks %}
-    <table class="leaderboard-table">
-      <thead>
-        <tr>
-          <th>Fight</th>
-          <th>Picked</th>
-          <th>Method</th>
-          <th>Round</th>
-          <th>Result</th>
-          <th>Score</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for pick in picks %}
-          <tr>
-            <td>{{ pick.fight.fighter1 }} vs {{ pick.fight.fighter2 }}</td>
-            <td>{{ pick.selected_fighter }}</td>
-            <td>{{ pick.selected_method }}</td>
-            <td>{{ pick.selected_round}}</td>
-            <td>
-              {% if pick.is_correct is none %}
-                Pending
-              {% elif pick.is_correct %}
-                ✅
-              {% else %}
-                ❌
-              {% endif %}
-            </td>
-            <td>{{ pick.score or '-' }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+  <form method="get" class="mb-4">
+    <label for="event_id" class="form-label fw-semibold">Filter by Event:</label>
+    <select name="event_id" id="event_id" class="form-select form-select-sm w-auto d-inline-block" onchange="this.form.submit()">
+      <option value="">All Events</option>
+      {% for event in events %}
+      <option value="{{ event.id }}" {% if event.id == selected_event_id %}selected{% endif %}>
+        {{ event.name }}
+      </option>
+    {% endfor %}
+  </select>
+</form>
+
+  {% if grouped_picks %}
+  {% for event_id, picks in grouped_picks.items() %}
+    <h4>{{ events_by_id[event_id].name }}</h4>
+      <div class="table-responsive mb-4">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Fight</th>
+              <th>Picked</th>
+              <th>Method</th>
+              <th>Round</th>
+              <th>Result</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pick in picks %}
+              <tr>
+                <td>{{ pick.fight.fighter1 }} vs {{ pick.fight.fighter2 }}</td>
+                <td>{{ pick.selected_fighter }}</td>
+                <td>{{ pick.selected_method }}</td>
+                <td>{{ pick.selected_round }}</td>
+                <td>
+                  {% if pick.is_correct is none %}
+                    <span class="text-secondary">Pending</span>
+                  {% elif pick.is_correct %}
+                    <span class="text-success fw-bold">✅</span>
+                  {% else %}
+                    <span class="text-danger fw-bold">❌</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if pick.score is not none %}
+                    <strong>{{ pick.score }}</strong>
+                  {% else %}
+                    <span class="text-muted">–</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
   {% else %}
-    <p>No picks made yet.</p>
+    <p class="text-muted">No picks made yet.</p>
   {% endif %}
+  
 {% endblock %}

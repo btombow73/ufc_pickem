@@ -1,7 +1,7 @@
 from flask import Flask
 from config import Config
 from .extensions import db, login_manager, migrate
-from .models import User
+from .models import User, Fighter
 
 def create_app():
     app = Flask(__name__)

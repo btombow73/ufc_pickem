@@ -4,6 +4,19 @@
 <div class="container mt-4">
   <h2 class="mb-4">🏆 Leaderboard</h2>
 
+  <form method="get" class="mb-4">
+    <label for="event_id" class="form-label fw-semibold">Filter by Event:</label>
+    <select name="event_id" id="event_id" class="form-select form-select-sm w-auto d-inline-block" onchange="this.form.submit()">
+      <option value="0" {% if selected_event_id == 0 %}selected{% endif %}>All Events</option>
+      {% for event in events %}
+        <option value="{{ event.id }}" {% if event.id == selected_event_id %}selected{% endif %}>
+          {{ event.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+  
+
   <div class="table-responsive">
     <table class="table table-bordered table-striped align-middle">
       <thead class="table-light">
@@ -15,11 +28,13 @@
       </thead>
       <tbody>
         {% for user in leaderboard %}
-        <tr {% if user.username == 'Book' %} class="table-warning fw-bold" {% endif %}>
+        <tr {% if user.username == 'Book' %} class="table-warning" {% endif %}>
           <td>{{ loop.index }}</td>
           <td>
             {% if user.username == 'Book' %}
-              🧠 {{ user.username }} <span class="badge bg-secondary"></span>
+              <a href="{{ url_for('main.profile', user_id=user.id) }}">
+                🧠 <strong>{{ user.username }}</strong>
+              </a>
             {% else %}
               <a href="{{ url_for('main.profile', user_id=user.id) }}">{{ user.username }}</a>
             {% endif %}
@@ -27,7 +42,6 @@
           <td>{{ user.points }}</td>
         </tr>
         {% endfor %}
-        
       </tbody>
     </table>
   </div>

@@ -165,6 +165,8 @@ def update_fight(fight_id):
 
     fight = Fight.query.get_or_404(fight_id)
     form = FightForm()
+    events = Event.query.all()
+
     form.event_id.choices = [(event.id, event.name) for event in events]
 
     if request.method == 'GET':
@@ -191,6 +193,17 @@ def update_fight(fight_id):
             fight.order = form.order.data
 
         db.session.commit()
+
+        # 🧠 Update Book user’s pick
+        book_user = User.query.filter_by(username="Book").first()
+        if book_user:
+            book_pick = Pick.query.filter_by(user_id=book_user.id, fight_id=fight.id).first()
+            if book_pick:
+                book_pick.selected_fighter = fight.favorite
+                book_pick.selected_method = fight.best_method
+                book_pick.selected_round = fight.best_round
+                db.session.commit()
+
         flash("Fight updated successfully!", "success")
         return redirect(url_for('main.dashboard'))
 

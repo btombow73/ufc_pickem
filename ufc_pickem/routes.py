@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user, login_required, login_user
 from werkzeug.security import generate_password_hash
 from .models import User, Fight, Pick, Event
@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import os
 from .utils import evaluate_badges_for_user
+import json
 
 main = Blueprint('main', __name__)
 
@@ -110,13 +111,17 @@ def dashboard():
         )
         for pick in book_picks:
             book_picks_map[pick.fight_id] = pick
-
+    fight_data = {
+        fight.id: {"fighter1": fight.fighter1, "fighter2": fight.fighter2}
+        for event in upcoming_events for fight in event.fights
+}
     return render_template(
         'dashboard.html',
         upcoming_events=upcoming_events,
         past_events=past_events,
         picks_map=picks_map,
-        book_picks_map=book_picks_map
+        book_picks_map=book_picks_map,
+        fight_data_json=json.dumps(fight_data)
     )
 
 
@@ -316,3 +321,60 @@ def leaderboard():
         event_winners=event_winners
     )
 
+@main.route('/submit_pick', methods=['POST'])
+@login_required
+def submit_pick():
+    fight_id = request.form.get('fight_id')
+    selected_fighter = request.form.get('selected_fighter')
+    selected_method = request.form.get('selected_method')
+    selected_round = request.form.get('selected_round')
+
+    existing_pick = Pick.query.filter_by(user_id=current_user.id, fight_id=fight_id).first()
+    if existing_pick:
+        existing_pick.selected_fighter = selected_fighter
+        existing_pick.selected_method = selected_method
+        existing_pick.selected_round = selected_round
+    else:
+        pick = Pick(
+            user_id=current_user.id,
+            fight_id=fight_id,
+            selected_fighter=selected_fighter,
+            selected_method=selected_method,
+            selected_round=selected_round
+        )
+        db.session.add(pick)
+    
+    db.session.commit()
+    flash("Your pick has been saved!", "success")
+    return redirect(url_for('main.dashboard'))
+
+@main.route('/update_pick', methods=['POST'])
+@login_required
+def update_pick():
+    fight_id = request.form.get('fight_id')
+    selected_fighter = request.form.get('selected_fighter')
+    selected_method = request.form.get('selected_method')
+    selected_round = request.form.get('selected_round')
+
+    if not fight_id or not selected_fighter:
+        return jsonify({"success": False, "message": "Missing required fields."}), 400
+
+    pick = Pick.query.filter_by(user_id=current_user.id, fight_id=fight_id).first()
+    if not pick:
+        pick = Pick(user_id=current_user.id, fight_id=fight_id)
+
+    pick.selected_fighter = selected_fighter
+    pick.selected_method = selected_method
+    pick.selected_round = selected_round
+    db.session.add(pick)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": "Pick updated successfully!",
+        "pick": {
+            "selected_fighter": selected_fighter,
+            "selected_method": selected_method,
+            "selected_round": selected_round
+        }
+    })

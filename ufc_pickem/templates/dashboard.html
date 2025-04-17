@@ -22,6 +22,7 @@
 {% endif %}
 
 </a>
+<div class="container events-overlay">
 <h2>Upcoming Events</h2>
 <div id="upcoming-events">
   {% if upcoming_events %}
@@ -85,37 +86,41 @@
                 {% endif %}
 
                 {% if current_user.is_authenticated and not current_user.is_admin and not fight.winner %}
-                  {% if fight.event.is_locked %}
-                    {% if pick %}
-                      <p class="text-muted mb-0">
-                        <i class="fas fa-lock me-1"></i> <strong>Your Pick:</strong> {{ pick.selected_fighter }}
-                        {% if pick.selected_method == "Decision" %}
-                          ({{ pick.selected_method }})
-                        {% else %}
-                          ({{ pick.selected_method }} – {{ pick.selected_round }})
-                        {% endif %}
-                      </p>
-                    {% else %}
-                      <p class="text-muted mb-0">
-                        <i class="fas fa-lock me-1"></i> <em>You didn’t make a pick for this fight.</em>
-                      </p>
-                    {% endif %}
-                  {% else %}
-                    {% if pick %}
-                      <p>
-                        <strong>Your Pick:</strong> {{ pick.selected_fighter }}
-                        {% if pick.selected_method == "Decision" %}
-                          ({{ pick.selected_method }})
-                        {% else %}
-                          ({{ pick.selected_method }} – {{ pick.selected_round }})
-                        {% endif %}
-                        <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-outline-primary btn-sm ms-2">Edit Pick</a>
-                      </p>
-                    {% else %}
-                      <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-success btn-sm">Make Pick</a>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
+  {% if fight.event.is_locked %}
+    {% if pick %}
+      <p class="text-muted mb-0">
+        <i class="fas fa-lock me-1"></i> <strong>Your Pick:</strong> {{ pick.selected_fighter }}
+        {% if pick.selected_method == "Decision" %}
+          ({{ pick.selected_method }})
+        {% else %}
+          ({{ pick.selected_method }} – {{ pick.selected_round }})
+        {% endif %}
+      </p>
+    {% else %}
+      <p class="text-muted mb-0">
+        <i class="fas fa-lock me-1"></i> <strong>Your Pick:</strong> <em>Pick not entered</em>
+      </p>
+    {% endif %}
+  {% else %}
+    {% if pick %}
+      <p>
+        <strong>Your Pick:</strong> {{ pick.selected_fighter }}
+        {% if pick.selected_method == "Decision" %}
+          ({{ pick.selected_method }})
+        {% else %}
+          ({{ pick.selected_method }} – {{ pick.selected_round }})
+        {% endif %}
+        <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-outline-primary btn-sm ms-2">Edit Pick</a>
+      </p>
+    {% else %}
+      <p>
+        <strong>Your Pick:</strong> <em>Pick not entered</em>
+        <a href="{{ url_for('main.picks', fight_id=fight.id) }}" class="btn btn-success btn-sm ms-2">Make Pick</a>
+      </p>
+    {% endif %}
+  {% endif %}
+{% endif %}
+
             
                 {% if current_user.is_authenticated and current_user.is_admin %}
                   <a href="{{ url_for('admin.update_fight', fight_id=fight.id) }}" class="btn btn-outline-secondary btn-sm">Edit Fight</a>
@@ -177,9 +182,11 @@
 
               <div class="actions text-end">
                 {% set pick = picks_map.get(fight.id) %}
-                {% if current_user.is_authenticated and pick %}
+                {% if current_user.is_authenticated %}
+                {% if current_user.is_authenticated %}
+                {% if pick %}
                   <p>
-                    Your Pick: {{ pick.selected_fighter }}
+                    <strong>Your Pick:</strong> {{ pick.selected_fighter }}
                     {% if pick.selected_method == "Decision" %}
                       ({{ pick.selected_method }})
                     {% else %}
@@ -188,6 +195,12 @@
                     {% if fight.winner %}
                       – <strong>Points:</strong> {{ pick.points_awarded }}
                     {% endif %}
+                  </p>
+                {% else %}
+                  <p><strong>Your Pick:</strong> <em>Pick not entered</em></p>
+                {% endif %}
+              {% endif %}
+              
                   </p>
                 {% endif %}
 
@@ -238,6 +251,7 @@
       });
     });
   </script>
+  </div>
 {% endif %}
 
 {% endblock %}

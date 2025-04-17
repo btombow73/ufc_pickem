@@ -112,3 +112,21 @@ class Pick(db.Model):
 
     def __repr__(self):
         return f"Pick(User={self.user_id}, Fight={self.fight_id}, Picked='{self.selected_fighter}', Points={self.points_awarded})"
+
+class Badge(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    icon = db.Column(db.String(100), nullable=False)  # e.g., '🔥', '💩', or a path to an icon
+    description = db.Column(db.String(200))
+    difficulty = db.Column(db.String(10))  # 'easy', 'medium', 'hard'
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=True)
+
+
+class UserBadge(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    badge_id = db.Column(db.Integer, db.ForeignKey('badge.id'))
+
+    user = db.relationship('User', backref='user_badges')
+    badge = db.relationship('Badge')
+

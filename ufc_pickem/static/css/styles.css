@@ -359,3 +359,7 @@ body {
   font-size: 0.9rem;
   margin-top: 0.25rem;
 }
+
+.badge-icon {
+  font-size: 1rem;
+}

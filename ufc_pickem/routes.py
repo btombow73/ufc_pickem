@@ -10,6 +10,7 @@ import secrets
 from zoneinfo import ZoneInfo
 import pandas as pd
 import os
+from .utils import evaluate_badges_for_user
 
 main = Blueprint('main', __name__)
 
@@ -250,25 +251,29 @@ def leaderboard():
         flash("Please verify your email to view the leaderboard.", "warning")
         return redirect(url_for('main.dashboard'))
 
-    # Fetch all events ordered by most recent (highest ID first)
+    # Fetch all events ordered by most recent
     events = Event.query.order_by(Event.id.desc()).all()
     selected_event_id = request.args.get('event_id', type=int)
 
-    # If no event selected, default to most recent (if any exist)
+    # Default to most recent event if none selected
     if selected_event_id is None and events:
         selected_event_id = events[0].id
 
     filtered_leaderboard = []
     selected_event = None
 
-    if selected_event_id == 0:  # 0 will represent "All Events"
-        # Lifetime leaderboard
+    if selected_event_id == 0:  # All-time leaderboard
         users = User.query.all()
         for user in users:
             user.points = sum(p.points_awarded or 0 for p in user.picks)
-        filtered_leaderboard = sorted(users, key=lambda u: u.points, reverse=True)
-    else:
-        # Filter by single event
+            user.badges = [
+                ub.badge for ub in user.user_badges
+                if ub.badge and ub.badge.event_id is None  # all-time only
+            ]
+            filtered_leaderboard.append(user)
+        filtered_leaderboard.sort(key=lambda u: u.points, reverse=True)
+
+    else:  # Specific event
         selected_event = Event.query.get(selected_event_id)
         if selected_event:
             event_scores = {}
@@ -279,6 +284,10 @@ def leaderboard():
                 user = User.query.get(user_id)
                 if user:
                     user.points = points
+                    user.badges = [
+                        ub.badge for ub in user.user_badges
+                        if ub.badge and ub.badge.event_id == selected_event_id
+                    ]
                     filtered_leaderboard.append(user)
             filtered_leaderboard.sort(key=lambda u: u.points, reverse=True)
 
@@ -306,3 +315,4 @@ def leaderboard():
         selected_event_id=selected_event_id,
         event_winners=event_winners
     )
+

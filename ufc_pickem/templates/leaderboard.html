@@ -31,14 +31,23 @@
         <tr {% if user.username == 'Book' %} class="table-warning" {% endif %}>
           <td>{{ loop.index }}</td>
           <td>
-            {% if user.username == 'Book' %}
-              <a href="{{ url_for('main.profile', user_id=user.id) }}">
-                🧠 <strong>{{ user.username }}</strong>
-              </a>
-            {% else %}
-              <a href="{{ url_for('main.profile', user_id=user.id) }}">{{ user.username }}</a>
-            {% endif %}
+            <a href="{{ url_for('main.profile', user_id=user.id) }}">
+              {% if user.username == 'Book' %}🧠 {% endif %}
+              <strong>{{ user.username }}</strong>
+            </a>
+            {% for badge in user.badges %}
+              <span 
+                class="ms-1 badge-icon" 
+                data-bs-toggle="tooltip" 
+                data-bs-placement="top" 
+                title="{{ badge.description }}"
+              >
+                {{ badge.icon }}
+              </span>
+            {% endfor %}
+
           </td>
+          
           <td>{{ user.points }}</td>
         </tr>
         {% endfor %}

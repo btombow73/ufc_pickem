@@ -81,8 +81,14 @@ def toggle_lock(event_id):
     event.is_locked = not event.is_locked
     db.session.commit()
 
+    # ✅ Assign badges when locking the event (after scoring is finalized)
+    if event.is_locked:
+        from .utils import assign_badges_for_event
+        assign_badges_for_event(event.id)
+
     flash(f"{'Locked' if event.is_locked else 'Unlocked'} picks for {event.name}", 'success')
     return redirect(request.referrer or url_for('main.dashboard'))
+
 
 @admin.route('/toggle_archive/<int:event_id>', methods=['POST'])
 @login_required

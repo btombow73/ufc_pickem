@@ -88,7 +88,7 @@ input:focus, select:focus, textarea:focus {
   background-color: #007bff;
   color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 2px 8px;
   border-radius: 5px;
 }
 .btn:hover { background-color: #0056b3; }
@@ -139,7 +139,16 @@ button:active, .btn:active { transform: scale(0.96); transition: transform 0.1s 
   gap: 0.25rem;
 }
 
-
+/* === RESPONSIVE FIGHT LIST === */
+@media (min-width: 576px) {
+  .fight-list .list-group-item {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+@media (max-width: 575px) {
+  .event-toggle { flex-direction: column; align-items: flex-start; }
+}
 
 /* === HERO + OVERLAYS === */
 .hero-section {

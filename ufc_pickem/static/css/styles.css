@@ -139,16 +139,7 @@ button:active, .btn:active { transform: scale(0.96); transition: transform 0.1s 
   gap: 0.25rem;
 }
 
-/* === RESPONSIVE FIGHT LIST === */
-@media (min-width: 576px) {
-  .fight-list .list-group-item {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-}
-@media (max-width: 575px) {
-  .event-toggle { flex-direction: column; align-items: flex-start; }
-}
+
 
 /* === HERO + OVERLAYS === */
 .hero-section {
